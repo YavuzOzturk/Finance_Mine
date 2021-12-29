@@ -1,4 +1,5 @@
 import multiprocessing
+import string
 from multiprocessing import Queue
 from os import walk
 import openpyxl as openpyxl
@@ -12,28 +13,28 @@ output_folder = 'Invoice/Output/'
 data_folder = 'Invoice/'
 
 def create_cross_ref(arg1, arg2): # arg1: dates, arg2: invoice files
-    i = 0
-
     for file in arg2:
         path_to_csv = 'Invoice/' + file + '.csv'
         csvFile = pandas.read_csv(path_to_csv)
         # csvFile['G_tarix'] = pandas.to_datetime(csvFile['G_tarix'], format='%Y%m%d', errors='coerce')
         arr = numpy.array(csvFile.values)
         for row in range(len(arr)):
-            if arr[row][2] != 'None' and float.is_integer(arr[row][2]) :
-                date1 = xlrd.xldate_as_datetime(arr[row][2],0)
-                date2 = date1.date()
-                date3 = date2.isoformat()
-            else :
-                print("Else")
-
-            #else:
-                #if file[-4:-1] == "ymd":
-                #    print('ymd')
-            #print(row)
-            #if file[:-5] == ')':
-            #    print(file)
-
+            try :
+                if isinstance(arr[row][2], float):
+                    date1 = xlrd.xldate_as_datetime(arr[row][2],0)
+                    date2 = date1.date()
+                    date3 = date2.isoformat()
+                    dateV1 = date3.replace("-","")
+                else:
+                    if file[-4:-1] == "ymd":
+                        dateV2 = arr[row][2][:-9]
+                        dateV2 = dateV2.replace("-", "")
+                    else:
+                        if file[-4:-1] == "dmy":
+                            dateV3 = arr[row][2][-4:]+""+arr[row][2][-7:-5]+""+arr[row][2][-10:-8]
+                #    print(str)
+            except:
+                print("Error", arr[row][2])
 
 def write_csv(path, csv_row):
     full_path = output_folder + path
