@@ -12,7 +12,13 @@ import xlrd as xlrd
 output_folder = 'Invoice/Output/'
 data_folder = 'Invoice/'
 
+def write_to_another_csv(path, csv_row):
+    with open(path, 'a', newline='', encoding="utf-8") as f:
+        f.write(csv_row)
+
 def create_cross_ref(arg1, arg2): # arg1: dates, arg2: invoice files
+    path_to_out = 'Invoice/Output/' + str(arg1)
+    #print(path_to_out)
     for file in arg2:
         path_to_csv = 'Invoice/' + file + '.csv'
         csvFile = pandas.read_csv(path_to_csv)
@@ -25,16 +31,26 @@ def create_cross_ref(arg1, arg2): # arg1: dates, arg2: invoice files
                     date2 = date1.date()
                     date3 = date2.isoformat()
                     dateV1 = date3.replace("-","")
+                    if dateV1 == arg1[:-4]:
+                        row_curr = "\"" + dateV1 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\"\n"
+                        write_to_another_csv(path_to_out, row_curr)
                 else:
                     if file[-4:-1] == "ymd":
                         dateV2 = arr[row][2][:-9]
                         dateV2 = dateV2.replace("-", "")
+                        if dateV2 == arg1[:-4]:
+                            row_curr = "\"" + dateV2 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\"\n"
+                            write_to_another_csv(path_to_out, row_curr)
                     else:
                         if file[-4:-1] == "dmy":
                             dateV3 = arr[row][2][-4:]+""+arr[row][2][-7:-5]+""+arr[row][2][-10:-8]
+                            if dateV3 == arg1[:-4]:
+                                row_curr = "\"" + dateV3 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\"\n"
+                                write_to_another_csv(path_to_out, row_curr)
                 #    print(str)
             except:
-                print("Error", arr[row][2])
+                l = 0
+                # print("Error", arr[row][2])
 
 def write_csv(path, csv_row):
     full_path = output_folder + path
