@@ -24,6 +24,8 @@ def create_cross_ref(arg1, arg2): # arg1: dates, arg2: invoice files
                 date1 = xlrd.xldate_as_datetime(arr[row][2],0)
                 date2 = date1.date()
                 date3 = date2.isoformat()
+            else :
+                print("Else")
 
             #else:
                 #if file[-4:-1] == "ymd":
