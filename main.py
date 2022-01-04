@@ -9,12 +9,24 @@ import numpy
 import time
 import xlrd as xlrd
 
+# Performance
+# Generate new Invoice list from system data 57s
+# Generate new Invoice list and iterate through info list 833s
+# Generate new Invoice list with the information gathered from info list
+#
+
 output_folder = 'Invoice/Output/'
 data_folder = 'Invoice/'
 
-def write_to_another_csv(path, csv_row):
-    with open(path, 'a', newline='', encoding="utf-8") as f:
-        f.write(csv_row)
+def get_student_info (arg2): # arg1: path to student file, arg2: student id
+    path = ["Veriler1_old/E_SPREADSHEET/V_1 kurs.csv","Veriler1_old/E_SPREADSHEET/V_2 kurs.csv","Veriler1_old/E_SPREADSHEET/V_3 kurs.csv","Veriler1_old/E_SPREADSHEET/V_4 kurs.csv","Veriler1_old/E_SPREADSHEET/V_5 kurs.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_1 kurs.csv", "Veriler1_old/E_SPREADSHEET_HARICI/V_2 kurs.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_3 kurs.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_4 kurs.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_5 kurs.csv"]
+    stu_info = "NO_INFO"
+    for file in range(len(path)):
+        personList = pandas.read_csv(path[file])
+
+
+    return stu_info
+
 
 def create_cross_ref(arg1, arg2): # arg1: dates, arg2: invoice files
     path_to_out = 'Invoice/Output/' + str(arg1)
@@ -32,25 +44,31 @@ def create_cross_ref(arg1, arg2): # arg1: dates, arg2: invoice files
                     date3 = date2.isoformat()
                     dateV1 = date3.replace("-","")
                     if dateV1 == arg1[:-4]:
-                        row_curr = "\"" + dateV1 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\"\n"
+                        row_curr = "\"" + dateV1 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\",\"" + get_student_info(arr[row][1]) + "\"\n"
                         write_to_another_csv(path_to_out, row_curr)
                 else:
                     if file[-4:-1] == "ymd":
                         dateV2 = arr[row][2][:-9]
                         dateV2 = dateV2.replace("-", "")
                         if dateV2 == arg1[:-4]:
-                            row_curr = "\"" + dateV2 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\"\n"
+                            row_curr = "\"" + dateV2 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\",\"" + get_student_info(arr[row][1]) + "\"\n"
                             write_to_another_csv(path_to_out, row_curr)
                     else:
                         if file[-4:-1] == "dmy":
                             dateV3 = arr[row][2][-4:]+""+arr[row][2][-7:-5]+""+arr[row][2][-10:-8]
                             if dateV3 == arg1[:-4]:
-                                row_curr = "\"" + dateV3 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\"\n"
+                                row_curr = "\"" + dateV3 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\",\"" + get_student_info(arr[row][1]) + "\"\n"
                                 write_to_another_csv(path_to_out, row_curr)
                 #    print(str)
             except:
                 l = 0
                 # print("Error", arr[row][2])
+
+
+def write_to_another_csv(path, csv_row):
+    with open(path, 'a', newline='', encoding="utf-8") as f:
+        f.write(csv_row)
+
 
 def write_csv(path, csv_row):
     full_path = output_folder + path
