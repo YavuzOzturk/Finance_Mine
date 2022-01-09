@@ -1,7 +1,9 @@
+import csv
 import multiprocessing
 import string
 from multiprocessing import Queue
 from os import walk
+from os.path import exists
 import openpyxl as openpyxl
 from datetime import datetime
 import pandas
@@ -12,18 +14,134 @@ import xlrd as xlrd
 # Performance
 # Generate new Invoice list from system data 57s
 # Generate new Invoice list and iterate through info list 833s
-# Generate new Invoice list with the information gathered from info list
+# Generate new Invoice list with the information gathered from info list 1048s
+# Validate data 114s
+# Generate new set of files based on system source 1837s
+# Remove duplicates in generated files 3.9s
 #
 
-output_folder = 'Invoice/Output/'
-data_folder = 'Invoice/'
+output_folder = 'Invoice/stud_based_invoice_list/clean_lvl1/'  # Folder to write output
+data_folder = 'Invoice/stud_based_invoice_list/raw/'   # Folder that contains data to mine
+infolist_folder = 'Invoice/invoice_list_school/' # Folder that contains reference info
+
+def remove_duplicates(file_name):
+    try:
+        file_path = data_folder + file_name
+        output_path = output_folder + file_name
+        csv_file = pandas.read_csv(file_path)
+        csv_file.drop_duplicates(subset=None, inplace=True)
+        csv_file.to_csv(output_path, index=False, quoting=csv.QUOTE_ALL)
+    except Exception as e:
+        print(e)
+
+def create_stud_based_files(file_name, date_list):
+    out_write_path = output_folder + file_name + ".csv"
+    try :
+        for i in range(len(date_list)):
+            full_path = infolist_folder + date_list[i] + ".csv"
+            data_list_arr = pandas.read_csv(full_path)
+            data_list_arr_val = numpy.array(data_list_arr.values)
+            for j in range(len(data_list_arr_val)):
+                if data_list_arr_val[j][2] == file_name:
+                    row = "\"" + str(file_name) + "\",\"" + str(data_list_arr_val[j][0]) + "\",\"" + str(data_list_arr_val[j][1]) + "\",\"" + str(data_list_arr_val[j][3]) + "\"\n"
+                    write_to_another_csv(out_write_path, row)
+    except Exception as e:
+        print(e)
+
+
+# Letter 'ə' is inconsistent since it can be used as A or E when transformed, therefore it is being skipped
+def transliterate_to_en (string):
+    ret = string
+    ret = ret.replace('Ç','C')
+    ret = ret.replace('ç','c')
+    ret = ret.replace('İ','I')
+    ret = ret.replace('i','i')
+    ret = ret.replace('I','I')
+    ret = ret.replace('ı','i')
+    ret = ret.replace('Ğ','G')
+    ret = ret.replace('ğ','g')
+    ret = ret.replace('Ö','O')
+    ret = ret.replace('ö','o')
+    ret = ret.replace('Ş','S')
+    ret = ret.replace('ş','s')
+    ret = ret.replace('Ü','U')
+    ret = ret.replace('ü','u')
+    # ret = ret.replace('','')
+    # ret = ret.replace('','')
+    return ret
+
+def cross_ref_invoice(data_file):
+    try:
+        info_csv = pandas.read_csv(infolist_folder + data_file)
+        data_csv = pandas.read_csv(data_folder + data_file)
+        data_arr = numpy.array(data_csv.values)
+        info_arr = numpy.array(info_csv.values)
+        for i in range(len(data_arr)):
+            for j in range(len(info_arr)):
+                if info_arr[j][3] == data_arr[i][1]:
+                    names = data_arr[i][3].split()
+                    i = len(names)
+                    percentage = float(0)
+                    for name in names:
+                        if transliterate_to_en(str(name)) in transliterate_to_en(str(info_arr[j][4])):
+                            percentage = percentage + 1
+                            # print(str(name) + " - " + str(info_arr[j][4]) + " - " + str(percentage))
+                    if((percentage*100/i) >= 65):
+                        txt = " - " + str(names) + str(info_arr[j][4])
+                        # print(round((percentage*100)/i,5), transliterate_to_en(txt) )
+                        # print(str(str((percentage*100/i)) + " - " + info_arr[j][4]) + " - " + str(data_arr[i][3]) + "\n")
+                    # print(str(info_arr[j]) + " - " + str(data_arr[i]))
+
+    except Exception as e:
+        print(e)
+
+def validate_data(arg1): # Create a list with summed up results for validation
+    id = ""
+    value = ""
+    curr_row = ""
+    l = 0
+    path = data_folder + arg1
+    out_path = output_folder + "/outList.csv"
+    dataList = pandas.read_csv(path)
+    data_arr = numpy.array(dataList.values)
+    for row in range(len(data_arr)):
+        l = 0
+        try:
+            id = data_arr[row][2]
+            value = data_arr[row][3]
+            try:
+                if exists(out_path) :
+                    infoList = pandas.read_csv(out_path, header=None)
+                    info_arr = numpy.array(infoList.values)
+                    for index in range(len(info_arr)):
+                        if info_arr[index][0] == id: # Check for duplicates
+                            l=1
+                            index = len(info_arr)
+
+            except:
+                print("Error at: " + id)
+                l=0
+
+            if l == 0:
+                curr_row = "\"" + id + "\",\"" + value + "\"\n"
+                write_to_another_csv(out_path, curr_row)
+        except:
+            l=0
+
 
 def get_student_info (arg2): # arg1: path to student file, arg2: student id
     path = ["Veriler1_old/E_SPREADSHEET/V_1 kurs.csv","Veriler1_old/E_SPREADSHEET/V_2 kurs.csv","Veriler1_old/E_SPREADSHEET/V_3 kurs.csv","Veriler1_old/E_SPREADSHEET/V_4 kurs.csv","Veriler1_old/E_SPREADSHEET/V_5 kurs.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_1 kurs.csv", "Veriler1_old/E_SPREADSHEET_HARICI/V_2 kurs.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_3 kurs.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_4 kurs.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_5 kurs.csv"]
     stu_info = "NO_INFO"
     for file in range(len(path)):
         personList = pandas.read_csv(path[file])
+        info_arr = numpy.array(personList.values)
+        for row in range(len(info_arr)):
+            try:
+                if arg2 == info_arr[row][0]:
+                    stu_info = info_arr[row][1]
 
+            except:
+                l=0
 
     return stu_info
 
@@ -65,12 +183,12 @@ def create_cross_ref(arg1, arg2): # arg1: dates, arg2: invoice files
                 # print("Error", arr[row][2])
 
 
-def write_to_another_csv(path, csv_row):
+def write_to_another_csv(path, csv_row):  # Write output files from Source_2
     with open(path, 'a', newline='', encoding="utf-8") as f:
         f.write(csv_row)
 
 
-def write_csv(path, csv_row):
+def write_csv(path, csv_row): # Write output files from Source_1
     full_path = output_folder + path
     with open(full_path, 'a', newline='', encoding="utf-8") as f:
         f.write(csv_row)
@@ -99,6 +217,16 @@ def create_queue(path, q):
     for file in filenames_s:
         q.put(file, True, None)
 
+def create_queue_infile(path, q):
+    filenames_s = next(walk(path), (None, None, []))[2]
+    path = path + filenames_s.pop()
+    print(path)
+    dataList = pandas.read_csv(path)
+    data_arr = numpy.array(dataList.values)
+    for i in range(len(data_arr)):
+        q.put(data_arr[i][0])
+
+
 def create_list(path, l):
     filenames_s = next(walk(path), (None, None, []))[2]
     for file in filenames_s:
@@ -110,15 +238,16 @@ def main():
     q = Queue()
     file_list = list()
     procs = []
-    create_queue('Output/', q)
-    create_list(data_folder, file_list)
+    create_queue(data_folder, q)
+    # create_queue_infile(data_folder, q)
+    create_list(infolist_folder, file_list)
     file_list.sort()
     pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count()-1))
     while not (q.empty()):
 
         # proc_f_1 = pool.map_async(search_student, q)
         # proc_f_1 = Process(target=read_xlsx, args=(path_src, q.get()))
-        res = pool.apply_async(create_cross_ref, args=(q.get(), file_list,))
+        res = pool.apply_async(remove_duplicates, args=(q.get(),))
 
         # complete the processes
     pool.close()
