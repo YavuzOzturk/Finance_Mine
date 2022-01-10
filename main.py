@@ -20,13 +20,13 @@ import xlrd as xlrd
 # Remove duplicates in generated files 3.9s
 #
 
-output_folder = 'Invoice/stud_based_invoice_list/clean_lvl2/'  # Folder to write output
+output_folder = 'Invoice/stud_based_invoice_list/clean_lvl3/'  # Folder to write output
 data_folder = 'Invoice/stud_based_invoice_list/clean_lvl1/'   # Folder that contains data to mine
-infolist_folder = 'KapitalBankVeriler/Day_by_Day/' # Folder that contains reference info
+infolist_folder = 'Invoice/stud_based_invoice_list/clean_lvl2/' # Folder that contains reference info
 
 # Out -> Invoice/stud_based_invoice_list/clean_lvl3/
-# In -> Invoice/stud_based_invoice_list/clean_lvl2/
-def check_base_info(data):
+# In -> Invoice/stud_based_invoice_list/clean_lvl1/ & Invoice/stud_based_invoice_list/clean_lvl2/
+def check_base_info(data, file_list):
     path = ["Veriler1_old/E_SPREADSHEET/V_butun kurslar.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_butun kurslar.csv"]
     data_csv = pandas.read_csv(data_folder+data, index_col=False, header=None)
     data_csv_arr = numpy.array(data_csv.values)
@@ -45,7 +45,7 @@ def check_base_info(data):
                     for j in range(len(data_csv_arr)):
                         data_total = data_total + int(data_csv_arr[j][2])
 
-                    if(data_total == info_total):
+                    if(data_total == info_total) or (data not in file_list):
                         flag = 1
         if flag == 0:
             data_csv.to_csv(output_path, index=False, header=None, quoting=csv.QUOTE_ALL)
@@ -329,14 +329,14 @@ def main():
     procs = []
     create_queue(data_folder, q)
     # create_queue_infile(data_folder, q)
-    # create_list(infolist_folder, file_list)
-    # file_list.sort()
+    create_list(infolist_folder, file_list)
+    file_list.sort()
     pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count()-1))
     while not (q.empty()):
 
         # proc_f_1 = pool.map_async(search_student, q)
         # proc_f_1 = Process(target=read_xlsx, args=(path_src, q.get()))
-        res = pool.apply_async(cross_check_info_data, args=(q.get(),))
+        res = pool.apply_async(check_base_info, args=(q.get(), file_list,))
 
         # complete the processes
     pool.close()
