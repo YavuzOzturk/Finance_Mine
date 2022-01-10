@@ -20,20 +20,88 @@ import xlrd as xlrd
 # Remove duplicates in generated files 3.9s
 #
 
-output_folder = 'Invoice/stud_based_invoice_list/clean_lvl1/'  # Folder to write output
-data_folder = 'Invoice/stud_based_invoice_list/raw/'   # Folder that contains data to mine
-infolist_folder = 'Invoice/invoice_list_school/' # Folder that contains reference info
+output_folder = 'Invoice/stud_based_invoice_list/clean_lvl2/'  # Folder to write output
+data_folder = 'Invoice/stud_based_invoice_list/clean_lvl1/'   # Folder that contains data to mine
+infolist_folder = 'KapitalBankVeriler/Day_by_Day/' # Folder that contains reference info
 
+# Out -> Invoice/stud_based_invoice_list/clean_lvl3/
+# In -> Invoice/stud_based_invoice_list/clean_lvl2/
+def check_base_info(data):
+    path = ["Veriler1_old/E_SPREADSHEET/V_butun kurslar.csv","Veriler1_old/E_SPREADSHEET_HARICI/V_butun kurslar.csv"]
+    data_csv = pandas.read_csv(data_folder+data, index_col=False, header=None)
+    data_csv_arr = numpy.array(data_csv.values)
+    output_path = output_folder + data
+    info_total = int(0)
+    data_total = int(0)
+    flag = int(0)
+    try:
+        for path_in in path:
+            info_csv = pandas.read_csv(path_in)
+            info_csv_arr = numpy.array(info_csv.values)
+            for i in range(len(info_csv_arr)):
+                if str(data[:-4]) == str(info_csv_arr[i][0]):
+                    # print(str(info_csv_arr[i][9]) +" "+ str(info_csv_arr[i][10]) +" "+ str(info_csv_arr[i][11]) +" "+ str(info_csv_arr[i][12]) +" "+ str(info_csv_arr[i][13]))
+                    info_total = int(info_csv_arr[i][9]) + int(info_csv_arr[i][10]) + int(info_csv_arr[i][11]) + int(info_csv_arr[i][12]) + int(info_csv_arr[i][13])
+                    for j in range(len(data_csv_arr)):
+                        data_total = data_total + int(data_csv_arr[j][2])
+
+                    if(data_total == info_total):
+                        flag = 1
+        if flag == 0:
+            data_csv.to_csv(output_path, index=False, header=None, quoting=csv.QUOTE_ALL)
+    except Exception as e:
+        print(e)
+
+# Out -> clean_lvl2
+# In -> clean_lvl1
+def cross_check_info_data(data_file):
+    try:
+        data_list = list()
+        data_csv = pandas.read_csv(data_folder + data_file, index_col=False, header=None)
+        data_csv_arr = numpy.array(data_csv.values)
+        for i in range(len(data_csv_arr)):
+            flag = int(0)
+            info_path = infolist_folder + str(data_csv_arr[i][1]) + ".csv"
+            info_csv = pandas.read_csv(info_path, index_col=False, header=None)
+            info_csv_arr = numpy.array(info_csv.values)
+            names = str(data_csv_arr[i][3]).split()
+            for j in range(len(info_csv_arr)):
+                check_count = float(0)
+                if numpy.round(float(info_csv_arr[j][3]),1) == numpy.round(float(data_csv_arr[i][2]),1):
+                    for name in names:
+                        if (transliterate_to_en(str(name)) in transliterate_to_en(str(info_csv_arr[j][4]))) or (transliterate_to_en(str(name)) in transliterate_to_en(str(info_csv_arr[j][1]))) or (transliterate_to_en_v2(str(name)) in transliterate_to_en_v2(str(info_csv_arr[j][4]))) or (transliterate_to_en_v2(str(name)) in transliterate_to_en_v2(str(info_csv_arr[j][1]))):
+                            check_count = check_count + 1
+                        # else:
+                        #     if transliterate_to_en(str(name)) == 'ROVSEN':
+                        #         print(transliterate_to_en(str(name)) + " " + transliterate_to_en(str(info_csv_arr[j][4])) +" "+ transliterate_to_en(str(info_csv_arr[j][1])) +" "+ transliterate_to_en_v2(str(info_csv_arr[j][4])) +" "+ transliterate_to_en_v2(str(info_csv_arr[j][1])) + "\n")
+
+                            # print(str(name) + " - " + str(info_arr[j][4]) + " - " + str(percentage))
+                    if((check_count*100/len(names)) >= 65):
+                        flag = 1
+            if flag == 0:
+                data_list.append(data_csv_arr[i]) # TODO writes only one FIX IT!
+        for row in data_list:
+            curr_row = "\"" + str(row[0]) + "\",\"" + str(row[1]) + "\",\"" + str(row[2]) + "\",\"" + str(row[3]) + "\"\n"
+            write_to_another_csv(output_folder+data_file, curr_row)
+
+    except Exception as e:
+        print(e)
+
+# Any csv
+# Out -> clean_lvl1
+# In -> raw
 def remove_duplicates(file_name):
     try:
         file_path = data_folder + file_name
         output_path = output_folder + file_name
-        csv_file = pandas.read_csv(file_path)
+        csv_file = pandas.read_csv(file_path, index_col=False, header=None)
         csv_file.drop_duplicates(subset=None, inplace=True)
-        csv_file.to_csv(output_path, index=False, quoting=csv.QUOTE_ALL)
+        csv_file.to_csv(output_path, index=False, header=None, quoting=csv.QUOTE_ALL)
     except Exception as e:
         print(e)
 
+# Out -> stud_based_invoice/raw
+# In -> stud_list_from_sys & Invoice
 def create_stud_based_files(file_name, date_list):
     out_write_path = output_folder + file_name + ".csv"
     try :
@@ -66,9 +134,29 @@ def transliterate_to_en (string):
     ret = ret.replace('ş','s')
     ret = ret.replace('Ü','U')
     ret = ret.replace('ü','u')
-    # ret = ret.replace('','')
-    # ret = ret.replace('','')
-    return ret
+    ret = ret.replace('Ə','E')
+    ret = ret.replace('ə','e')
+    return str(ret).upper()
+
+def transliterate_to_en_v2 (string):
+    ret = string
+    ret = ret.replace('Ç','C')
+    ret = ret.replace('ç','c')
+    ret = ret.replace('İ','I')
+    ret = ret.replace('i','i')
+    ret = ret.replace('I','I')
+    ret = ret.replace('ı','i')
+    ret = ret.replace('Ğ','G')
+    ret = ret.replace('ğ','g')
+    ret = ret.replace('Ö','O')
+    ret = ret.replace('ö','o')
+    ret = ret.replace('Ş','S')
+    ret = ret.replace('ş','s')
+    ret = ret.replace('Ü','U')
+    ret = ret.replace('ü','u')
+    ret = ret.replace('Ə','A')
+    ret = ret.replace('ə','a')
+    return str(ret).upper()
 
 def cross_ref_invoice(data_file):
     try:
@@ -145,7 +233,8 @@ def get_student_info (arg2): # arg1: path to student file, arg2: student id
 
     return stu_info
 
-
+# Out -> Output/outlist.csv -> stud_list_from_sys
+# In -> Invoice/ & Veriler*/
 def create_cross_ref(arg1, arg2): # arg1: dates, arg2: invoice files
     path_to_out = 'Invoice/Output/' + str(arg1)
     #print(path_to_out)
@@ -221,7 +310,7 @@ def create_queue_infile(path, q):
     filenames_s = next(walk(path), (None, None, []))[2]
     path = path + filenames_s.pop()
     print(path)
-    dataList = pandas.read_csv(path)
+    dataList = pandas.read_csv(path, index_col=False, header=None)
     data_arr = numpy.array(dataList.values)
     for i in range(len(data_arr)):
         q.put(data_arr[i][0])
@@ -240,14 +329,14 @@ def main():
     procs = []
     create_queue(data_folder, q)
     # create_queue_infile(data_folder, q)
-    create_list(infolist_folder, file_list)
-    file_list.sort()
+    # create_list(infolist_folder, file_list)
+    # file_list.sort()
     pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count()-1))
     while not (q.empty()):
 
         # proc_f_1 = pool.map_async(search_student, q)
         # proc_f_1 = Process(target=read_xlsx, args=(path_src, q.get()))
-        res = pool.apply_async(remove_duplicates, args=(q.get(),))
+        res = pool.apply_async(cross_check_info_data, args=(q.get(),))
 
         # complete the processes
     pool.close()
