@@ -9,7 +9,7 @@ from datetime import datetime
 import pandas
 import numpy
 import time
-import xlrd as xlrd
+import xlrd
 #custom imports
 import utility
 
@@ -20,6 +20,7 @@ import utility
 # Validate data 114s
 # Generate new set of files based on system source 1837s
 # Remove duplicates in generated files 3.9s
+# Convert xlsx to csv (38k*16 sample size)
 #
 
 output_folder = 'Invoice/stud_based_invoice_list/clean_lvl3/'  # Folder to write output
@@ -87,7 +88,7 @@ def cross_check_info_data(data_file):
                 data_list.append(data_csv_arr[i]) # TODO writes only one FIX IT!
         for row in data_list:
             curr_row = "\"" + str(row[0]) + "\",\"" + str(row[1]) + "\",\"" + str(row[2]) + "\",\"" + str(row[3]) + "\"\n"
-            write_to_another_csv(output_folder+data_file, curr_row)
+            utility.write_to_csv(output_folder+data_file, curr_row)
 
     except Exception as e:
         print(e)
@@ -117,7 +118,7 @@ def create_stud_based_files(file_name, date_list):
             for j in range(len(data_list_arr_val)):
                 if data_list_arr_val[j][2] == file_name:
                     row = "\"" + str(file_name) + "\",\"" + str(data_list_arr_val[j][0]) + "\",\"" + str(data_list_arr_val[j][1]) + "\",\"" + str(data_list_arr_val[j][3]) + "\"\n"
-                    write_to_another_csv(out_write_path, row)
+                    utility.write_to_csv(out_write_path, row)
     except Exception as e:
         print(e)
 
@@ -217,7 +218,7 @@ def validate_data(arg1): # Create a list with summed up results for validation
 
             if l == 0:
                 curr_row = "\"" + id + "\",\"" + value + "\"\n"
-                write_to_another_csv(out_path, curr_row)
+                utility.write_to_csv(out_path, curr_row)
         except:
             l=0
 
@@ -257,29 +258,24 @@ def create_cross_ref(arg1, arg2): # arg1: dates, arg2: invoice files
                     dateV1 = date3.replace("-","")
                     if dateV1 == arg1[:-4]:
                         row_curr = "\"" + dateV1 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\",\"" + get_student_info(arr[row][1]) + "\"\n"
-                        write_to_another_csv(path_to_out, row_curr)
+                        utility.write_to_csv(path_to_out, row_curr)
                 else:
                     if file[-4:-1] == "ymd":
                         dateV2 = arr[row][2][:-9]
                         dateV2 = dateV2.replace("-", "")
                         if dateV2 == arg1[:-4]:
                             row_curr = "\"" + dateV2 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\",\"" + get_student_info(arr[row][1]) + "\"\n"
-                            write_to_another_csv(path_to_out, row_curr)
+                            utility.write_to_csv(path_to_out, row_curr)
                     else:
                         if file[-4:-1] == "dmy":
                             dateV3 = arr[row][2][-4:]+""+arr[row][2][-7:-5]+""+arr[row][2][-10:-8]
                             if dateV3 == arg1[:-4]:
                                 row_curr = "\"" + dateV3 + "\",\"" + str(arr[row][3]) + "\",\"" + str(arr[row][1]) + "\",\"" + get_student_info(arr[row][1]) + "\"\n"
-                                write_to_another_csv(path_to_out, row_curr)
+                                utility.write_to_csv(path_to_out, row_curr)
                 #    print(str)
             except:
                 l = 0
                 # print("Error", arr[row][2])
-
-
-def write_to_another_csv(path, csv_row):  # Write output files from Source_2
-    with open(path, 'a', newline='', encoding="utf-8") as f:
-        f.write(csv_row)
 
 
 def write_csv(path, csv_row): # Write output files from Source_1
