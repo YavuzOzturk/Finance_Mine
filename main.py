@@ -10,6 +10,8 @@ import pandas
 import numpy
 import time
 import xlrd as xlrd
+#custom imports
+import utility
 
 # Performance
 # Generate new Invoice list from system data 57s
@@ -23,6 +25,9 @@ import xlrd as xlrd
 output_folder = 'Invoice/stud_based_invoice_list/clean_lvl3/'  # Folder to write output
 data_folder = 'Invoice/stud_based_invoice_list/clean_lvl1/'   # Folder that contains data to mine
 infolist_folder = 'Invoice/stud_based_invoice_list/clean_lvl2/' # Folder that contains reference info
+input_file = "SingleFileInput/Təhsilalanlar_ATIS.xlsx" # Input file path for single file operations
+output_file = "SingleFileOutput/" # Outpuf file path for single file operations
+
 
 # Out -> Invoice/stud_based_invoice_list/clean_lvl3/
 # In -> Invoice/stud_based_invoice_list/clean_lvl1/ & Invoice/stud_based_invoice_list/clean_lvl2/
@@ -282,7 +287,7 @@ def write_csv(path, csv_row): # Write output files from Source_1
     with open(full_path, 'a', newline='', encoding="utf-8") as f:
         f.write(csv_row)
 
-
+# Create distinct files based on date from the external data source
 def create_date_dist (argument1):
     print(argument1)
     wb_obj = openpyxl.load_workbook(data_folder+argument1)
@@ -327,20 +332,21 @@ def main():
     q = Queue()
     file_list = list()
     procs = []
-    create_queue(data_folder, q)
+    # create_queue(data_folder, q)
     # create_queue_infile(data_folder, q)
-    create_list(infolist_folder, file_list)
-    file_list.sort()
-    pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count()-1))
-    while not (q.empty()):
-
-        # proc_f_1 = pool.map_async(search_student, q)
+    # create_list(infolist_folder, file_list)
+    # file_list.sort()
+    # pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count()-1))
+    # while not (q.empty()):
+      # proc_f_1 = pool.map_async(search_student, q)
         # proc_f_1 = Process(target=read_xlsx, args=(path_src, q.get()))
-        res = pool.apply_async(check_base_info, args=(q.get(), file_list,))
+    #    res = pool.apply_async(check_base_info, args=(q.get(), file_list,))
 
         # complete the processes
-    pool.close()
-    pool.join()
+    # pool.close()
+    # pool.join()
+
+    utility.xlsx2csv(input_file, output_file)
     print("Execution time : " , time.time() - start)
 
 
