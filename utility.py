@@ -37,7 +37,6 @@ def xlsx2csv(input_file, output_file):
                     row_curr += temp + "\",\""
                     cell +=1
                 write_to_csv(output_file, (row_curr[:-2] + "\n"))
-
         else:
             raise Exception("File extension is wrong")
     except Exception as e:
