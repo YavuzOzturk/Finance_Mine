@@ -54,10 +54,9 @@ def compare2diff(input1, input2, output):
         create_queue_infile(input1, q)
         pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count() - 1))
         while not (q.empty()):
-            res = pool.apply_async(substract_from_file, args=(q.get(), input2, 3, output,))
-        #pool.close()
-        #pool.join()
-
+            res = pool.apply_async(substract_from_file, args=(q.get(), input2, 5, output,))
+        pool.close()
+        pool.join()
     except Exception as e:
         print(e)
 
@@ -73,5 +72,11 @@ def create_queue_infile(path, q):
         print(e)
 # Search for a given field in a given file with given column index
 # Write to another file if not found
-def substract_from_file(field, file, col_index):
-    print("wassup")
+def substract_from_file(field, file, col_index, output):
+    try:
+        dataList = pandas.read_csv(file, low_memory=False, index_col=False, header=None)
+        data_arr = numpy.array(dataList.values)
+        for i in range(len(data_arr)):
+            print(data_arr[i][5]) # TODO finish this
+    except Exception as e:
+        print(e)
