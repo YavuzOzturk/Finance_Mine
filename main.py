@@ -23,11 +23,12 @@ import utility
 # Convert xlsx to csv (38k*16 sample size)
 #
 
-output_folder = 'Invoice/stud_based_invoice_list/clean_lvl3/'  # Folder to write output
-data_folder = 'Invoice/stud_based_invoice_list/clean_lvl1/'   # Folder that contains data to mine
+output_folder = 'SingleFileOutput/'  # Folder to write output
+data_folder = 'SingleFileInput/'   # Folder that contains data to mine
 infolist_folder = 'Invoice/stud_based_invoice_list/clean_lvl2/' # Folder that contains reference info
 input_file = "SingleFileInput/Təhsilalanlar_ATIS.xlsx" # Input file path for single file operations
-output_file = "SingleFileOutput/" # Outpuf file path for single file operations
+input_file2 = "SingleFileInput/students.csv"
+output_file = "SingleFileOutput/Təhsilalanlar_ATIS.csv" # Outpuf file path for single file operations
 
 
 # Out -> Invoice/stud_based_invoice_list/clean_lvl3/
@@ -100,7 +101,7 @@ def remove_duplicates(file_name):
     try:
         file_path = data_folder + file_name
         output_path = output_folder + file_name
-        csv_file = pandas.read_csv(file_path, index_col=False, header=None)
+        csv_file = pandas.read_csv(file_path, low_memory=False, index_col=False, header=None)
         csv_file.drop_duplicates(subset=None, inplace=True)
         csv_file.to_csv(output_path, index=False, header=None, quoting=csv.QUOTE_ALL)
     except Exception as e:
@@ -328,21 +329,21 @@ def main():
     q = Queue()
     file_list = list()
     procs = []
+    # utility.csv2queue(input_file, q)
     # create_queue(data_folder, q)
     # create_queue_infile(data_folder, q)
     # create_list(infolist_folder, file_list)
     # file_list.sort()
     # pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count()-1))
     # while not (q.empty()):
-      # proc_f_1 = pool.map_async(search_student, q)
-        # proc_f_1 = Process(target=read_xlsx, args=(path_src, q.get()))
-    #    res = pool.apply_async(check_base_info, args=(q.get(), file_list,))
+      # proc_f_1 = pool.map_async(search_student, q)   # OLD
+      #  proc_f_1 = Process(target=read_xlsx, args=(path_src, q.get())) # OLD
+    #   res = pool.apply_async(utility.compare2diff, args=(q.get(), 5, input_file2, 3, output_file, ))
 
         # complete the processes
     # pool.close()
     # pool.join()
-
-    utility.xlsx2csv(input_file, output_file)
+    remove_duplicates('Təhsilalanlar_ATIS.csv')
     print("Execution time : " , time.time() - start)
 
 
