@@ -2,6 +2,9 @@
 import numpy
 import openpyxl
 import pandas
+from multiprocessing import Queue
+import multiprocessing
+
 
 
 def write_to_csv(path, csv_row):  # Write output files from Source_2
@@ -45,9 +48,30 @@ def xlsx2csv(input_file, output_file):
 # Takes file1 csv, takes file2 csv
 # Compare two files by their given column indexes (file1_p, file2_p)
 # Creates an output file according to the difference between two files from file1
-def compare2diff(file1_row, file1_p, file2, file2_p, output):
-    print(file1)
-    print(file1_p)
-    print(file2)
-    print(file2_p)
-    print(output)
+def compare2diff(input1, input2, output):
+    try:
+        q = Queue()
+        create_queue_infile(input1, q)
+        pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count() - 1))
+        while not (q.empty()):
+            res = pool.apply_async(substract_from_file, args=(q.get(), input2, 3, output,))
+        #pool.close()
+        #pool.join()
+
+    except Exception as e:
+        print(e)
+
+# Creates a queue from the rows of a given csv file
+# path -> path to csv file, q -> queue
+def create_queue_infile(path, q):
+    try:
+        dataList = pandas.read_csv(path, index_col=False, header=None)
+        data_arr = numpy.array(dataList.values)
+        for i in range(len(data_arr)):
+            q.put(str(data_arr[i][4]) + " " + str(data_arr[i][3]) + " " + str(data_arr[i][5]))
+    except Exception as e:
+        print(e)
+# Search for a given field in a given file with given column index
+# Write to another file if not found
+def substract_from_file(field, file, col_index):
+    print("wassup")

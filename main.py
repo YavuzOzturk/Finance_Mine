@@ -26,9 +26,9 @@ import utility
 output_folder = 'SingleFileOutput/'  # Folder to write output
 data_folder = 'SingleFileInput/'   # Folder that contains data to mine
 infolist_folder = 'Invoice/stud_based_invoice_list/clean_lvl2/' # Folder that contains reference info
-input_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput\Təhsilalanlar_ATIS.xlsx" # Input file path for single file operations
-input_file2 = "SingleFileInput/students.csv"
-output_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput\Təhsilalanlar_ATIS.csv" # Output file path for single file operations
+input_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput\students.csv" # Input file path for single file operations
+input_file2 = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput2\Təhsilalanlar_ATIS.csv"
+output_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput\diff_stud.csv" # Output file path for single file operations
 
 
 # Out -> Invoice/stud_based_invoice_list/clean_lvl3/
@@ -308,16 +308,6 @@ def create_queue(path, q):
     for file in filenames_s:
         q.put(file, True, None)
 
-def create_queue_infile(path, q):
-    filenames_s = next(walk(path), (None, None, []))[2]
-    path = path + filenames_s.pop()
-    print(path)
-    dataList = pandas.read_csv(path, index_col=False, header=None)
-    data_arr = numpy.array(dataList.values)
-    for i in range(len(data_arr)):
-        q.put(data_arr[i][0])
-
-
 def create_list(path, l):
     filenames_s = next(walk(path), (None, None, []))[2]
     for file in filenames_s:
@@ -326,7 +316,7 @@ def create_list(path, l):
 def main():
     quit_flag = False
     #multiprocess addition
-    q = Queue()
+    # q = Queue()
     file_list = list()
     procs = []
     # utility.csv2queue(input_file, q)
@@ -345,10 +335,14 @@ def main():
     # pool.join()
 
     while(quit_flag == False):
-        key_input = input("Select an operation\n1)Convert xlsx file to csv\n99)Quit\n")
+        key_input = input("Select an operation\n1)Convert xlsx file to csv\n2)Compare two lists\n99)Quit\n")
         if key_input == '1':
             start = time.time()
             utility.xlsx2csv(input_file, output_file)
+            print("Execution time : ", time.time() - start)
+        elif key_input == '2':
+            start = time.time()
+            utility.compare2diff(input_file, input_file2, output_file)
             print("Execution time : ", time.time() - start)
         elif key_input == '99':
             quit_flag = True
