@@ -24,9 +24,7 @@ def csv2queue(file_path, q):
 # Converts an xlsx file to csv
 def xlsx2csv(input_file, output_file):
     try:
-        output_file = input_file[:-5] + ".csv"
-        output_file = output_file.replace("Input", "Output")
-        print(output_file)
+        output_file = output_file +  + "/output.csv"
         if(input_file[-5:] == '.xlsx'):
             wb_obj = openpyxl.load_workbook(input_file)
             sheet = wb_obj.active
@@ -80,7 +78,8 @@ def substract_from_file(field, file, col_index, output):
         data_arr = numpy.array(dataList.values)
         for i in range(len(data_arr)):
             if ( transliterate_to_en(str(field).upper()) in transliterate_to_en(str(data_arr[i][col_index]).upper()) ) or ( transliterate_to_en_v2(str(field).upper()) in transliterate_to_en_v2(str(data_arr[i][col_index]).upper()) ):
-                found = True
+                if str(field) != "NAN NAN NAN":
+                    found = True
         if not found:
             write_to_csv(output, str(field + "\n").upper())
 
