@@ -24,9 +24,7 @@ def csv2queue(file_path, q):
 # Converts an xlsx file to csv
 def xlsx2csv(input_file, output_file):
     try:
-        output_file = input_file[:-5] + ".csv"
-        output_file = output_file.replace("Input", "Output")
-        print(output_file)
+        output_file = output_file + "/output.csv"
         if(input_file[-5:] == '.xlsx'):
             wb_obj = openpyxl.load_workbook(input_file)
             sheet = wb_obj.active
