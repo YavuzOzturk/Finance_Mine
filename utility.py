@@ -73,15 +73,17 @@ def create_queue_infile(path, q):
 # Write to another file if not found
 def substract_from_file(field, file, col_index, output):
     try:
+        output = output + "/output.csv"
         found = False
         dataList = pandas.read_csv(file, low_memory=False, index_col=False, header=None)
         data_arr = numpy.array(dataList.values)
         for i in range(len(data_arr)):
             if ( transliterate_to_en(str(field).upper()) in transliterate_to_en(str(data_arr[i][col_index]).upper()) ) or ( transliterate_to_en_v2(str(field).upper()) in transliterate_to_en_v2(str(data_arr[i][col_index]).upper()) ):
-                if str(field) != "NAN NAN NAN":
+                if str(field).upper() != "NAN NAN NAN":
                     found = True
         if not found:
-            write_to_csv(output, str(field + "\n").upper())
+            result = str(field + "\n").upper()
+            write_to_csv(output, result)
 
     except Exception as e:
         print(e)
