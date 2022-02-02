@@ -49,7 +49,8 @@ def xlsx2csv(input_file, output_file):
 def compare2diff(input1, input2, output):
     try:
         q = Queue()
-        create_queue_infile(input1, q)
+        opt = [3, 4, 5]
+        create_queue_infile(input1, q, opt)
         pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count() - 1))
         while not (q.empty()):
             res = pool.apply_async(substract_from_file, args=(q.get(), input2, 5, output,))
@@ -62,21 +63,36 @@ def compare2diff(input1, input2, output):
 # path -> path to csv file, q -> queue
 def create_queue_infile(path, q):
     try:
-        dataList = pandas.read_csv(path, index_col=False, header=None)
-        data_arr = numpy.array(dataList.values)
+        data_list = pandas.read_csv(path, index_col=False, header=None)
+        data_arr = numpy.array(data_list.values)
         for i in range(len(data_arr)):
-            q.put(str(data_arr[i][3]) + " " + str(data_arr[i][4]) + " " + str(data_arr[i][5]))
+            q.put(str(data_arr[i]))
     except Exception as e:
         print(e)
+
+def create_queue_infile(path, q, opt):
+    try:
+        value = ""
+        data_list = pandas.read_csv(path, index_col=False, header=None)
+        data_arr = numpy.array(data_list.values)
+        for i in range(len(data_arr)):
+            for j in opt:
+                value = value + str(data_arr[i][j]) + " "
+            value = value[:-1]
+            q.put(value)
+            value = ""
+    except Exception as e:
+        print(e)
+
 
 # Search for a given field in a given file with given column index
 # Write to another file if not found
 def substract_from_file(field, file, col_index, output):
     try:
-        output = output + "/output.csv"
+        output = output + "/output_sub.csv"
         found = False
-        dataList = pandas.read_csv(file, low_memory=False, index_col=False, header=None)
-        data_arr = numpy.array(dataList.values)
+        data_list = pandas.read_csv(file, low_memory=False, index_col=False, header=None)
+        data_arr = numpy.array(data_list.values)
         for i in range(len(data_arr)):
             if ( transliterate_to_en(str(field).upper()) in transliterate_to_en(str(data_arr[i][col_index]).upper()) ) or ( transliterate_to_en_v2(str(field).upper()) in transliterate_to_en_v2(str(data_arr[i][col_index]).upper()) ):
                 if str(field).upper() != "NAN NAN NAN":
@@ -88,6 +104,24 @@ def substract_from_file(field, file, col_index, output):
     except Exception as e:
         print(e)
 
+
+# Filters a file according to the values in the base file
+# file1 -> Base File, file2 -> Data File, output -> Output file location to create an intersection list
+def intersection_of_file(file1, file2, output):
+    q = Queue()
+    create_queue_infile(file1, q)
+    pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count() - 1))
+    while not (q.empty()):
+        res = pool.apply_async(create_intersection_file, args=(q.get(), input2, 5, output,))
+    pool.close()
+    pool.join()
+    print(file1)
+    print(file2)
+    print(output)
+
+
+# Transliterate strings from Azerbaijani Latin to English Latin
+# Version 2 differs from Version 1 by converting 'ə' to 'e' or 'a'
 def transliterate_to_en (string):
     ret = string
     ret = ret.replace('Ç','C')
@@ -107,6 +141,7 @@ def transliterate_to_en (string):
     ret = ret.replace('Ə','E')
     ret = ret.replace('ə','e')
     return str(ret).upper()
+
 
 def transliterate_to_en_v2 (string):
     ret = string

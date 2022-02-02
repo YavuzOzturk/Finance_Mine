@@ -298,7 +298,7 @@ def main():
     # pool.join()
 
     while(quit_flag == False):
-        key_input = input("Select an operation\n1)Convert xlsx file to csv\n2)Compare two lists\n99)Quit\n")
+        key_input = input("Select an operation\n1)Convert xlsx file to csv\n2)Compare two lists(Substraction)\n3)Compare two lists(Intersection)\n99)Quit\n")
         if key_input == '1':
             root = Tk()
             filename = filedialog.askopenfilename(title = "Select an xlsx file to Convert to csv",filetypes = (("Xlsx files","*.xlsx"),))
@@ -315,6 +315,15 @@ def main():
             root.destroy()
             start = time.time()
             utility.compare2diff(filename1, filename2, dirname)
+            print("Execution time : ", time.time() - start)
+        elif key_input == '3':
+            root = Tk()
+            filename1 = filedialog.askopenfilename(title="Select the base file for comparison",filetypes=(("CSV files", "*.csv"),))
+            filename2 = filedialog.askopenfilename(title="Select the data file for comparison",filetypes=(("CSV files", "*.csv"),))
+            dirname = filedialog.askdirectory(title="Select a directory for csv output file")
+            root.destroy()
+            start = time.time()
+            utility.intersection_of_file(filename1, filename2, dirname)
             print("Execution time : ", time.time() - start)
         elif key_input == '99':
             quit_flag = True
