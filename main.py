@@ -28,7 +28,7 @@ data_folder = 'SingleFileInput/'   # Folder that contains data to mine
 infolist_folder = 'Invoice/stud_based_invoice_list/clean_lvl2/' # Folder that contains reference info
 input_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput\students.csv" # Input file path for single file operations
 input_file2 = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput2\Təhsilalanlar_ATIS.csv"
-output_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput\diff_stud.csv" # Output file path for single file operations
+output_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileOutput\diff_stud.csv" # Output file path for single file operations
 
 
 # Out -> Invoice/stud_based_invoice_list/clean_lvl3/
@@ -76,7 +76,7 @@ def cross_check_info_data(data_file):
                 check_count = float(0)
                 if numpy.round(float(info_csv_arr[j][3]),1) == numpy.round(float(data_csv_arr[i][2]),1):
                     for name in names:
-                        if (transliterate_to_en(str(name)) in transliterate_to_en(str(info_csv_arr[j][4]))) or (transliterate_to_en(str(name)) in transliterate_to_en(str(info_csv_arr[j][1]))) or (transliterate_to_en_v2(str(name)) in transliterate_to_en_v2(str(info_csv_arr[j][4]))) or (transliterate_to_en_v2(str(name)) in transliterate_to_en_v2(str(info_csv_arr[j][1]))):
+                        if (utility.transliterate_to_en(str(name)) in utility.transliterate_to_en(str(info_csv_arr[j][4]))) or (utility.transliterate_to_en(str(name)) in utility.transliterate_to_en(str(info_csv_arr[j][1]))) or (utility.transliterate_to_en_v2(str(name)) in utility.transliterate_to_en_v2(str(info_csv_arr[j][4]))) or (utility.transliterate_to_en_v2(str(name)) in utility.transliterate_to_en_v2(str(info_csv_arr[j][1]))):
                             check_count = check_count + 1
                         # else:
                         #     if transliterate_to_en(str(name)) == 'ROVSEN':
@@ -125,45 +125,6 @@ def create_stud_based_files(file_name, date_list):
 
 
 # Letter 'ə' is inconsistent since it can be used as A or E when transformed, therefore it is being skipped
-def transliterate_to_en (string):
-    ret = string
-    ret = ret.replace('Ç','C')
-    ret = ret.replace('ç','c')
-    ret = ret.replace('İ','I')
-    ret = ret.replace('i','i')
-    ret = ret.replace('I','I')
-    ret = ret.replace('ı','i')
-    ret = ret.replace('Ğ','G')
-    ret = ret.replace('ğ','g')
-    ret = ret.replace('Ö','O')
-    ret = ret.replace('ö','o')
-    ret = ret.replace('Ş','S')
-    ret = ret.replace('ş','s')
-    ret = ret.replace('Ü','U')
-    ret = ret.replace('ü','u')
-    ret = ret.replace('Ə','E')
-    ret = ret.replace('ə','e')
-    return str(ret).upper()
-
-def transliterate_to_en_v2 (string):
-    ret = string
-    ret = ret.replace('Ç','C')
-    ret = ret.replace('ç','c')
-    ret = ret.replace('İ','I')
-    ret = ret.replace('i','i')
-    ret = ret.replace('I','I')
-    ret = ret.replace('ı','i')
-    ret = ret.replace('Ğ','G')
-    ret = ret.replace('ğ','g')
-    ret = ret.replace('Ö','O')
-    ret = ret.replace('ö','o')
-    ret = ret.replace('Ş','S')
-    ret = ret.replace('ş','s')
-    ret = ret.replace('Ü','U')
-    ret = ret.replace('ü','u')
-    ret = ret.replace('Ə','A')
-    ret = ret.replace('ə','a')
-    return str(ret).upper()
 
 def cross_ref_invoice(data_file):
     try:
@@ -178,7 +139,7 @@ def cross_ref_invoice(data_file):
                     i = len(names)
                     percentage = float(0)
                     for name in names:
-                        if transliterate_to_en(str(name)) in transliterate_to_en(str(info_arr[j][4])):
+                        if utility.transliterate_to_en(str(name)) in utility.transliterate_to_en(str(info_arr[j][4])):
                             percentage = percentage + 1
                             # print(str(name) + " - " + str(info_arr[j][4]) + " - " + str(percentage))
                     if((percentage*100/i) >= 65):

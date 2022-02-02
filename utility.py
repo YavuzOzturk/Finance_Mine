@@ -67,16 +67,62 @@ def create_queue_infile(path, q):
         dataList = pandas.read_csv(path, index_col=False, header=None)
         data_arr = numpy.array(dataList.values)
         for i in range(len(data_arr)):
-            q.put(str(data_arr[i][4]) + " " + str(data_arr[i][3]) + " " + str(data_arr[i][5]))
+            q.put(str(data_arr[i][3]) + " " + str(data_arr[i][4]) + " " + str(data_arr[i][5]))
     except Exception as e:
         print(e)
+
 # Search for a given field in a given file with given column index
 # Write to another file if not found
 def substract_from_file(field, file, col_index, output):
     try:
+        found = False
         dataList = pandas.read_csv(file, low_memory=False, index_col=False, header=None)
         data_arr = numpy.array(dataList.values)
         for i in range(len(data_arr)):
-            print(data_arr[i][5]) # TODO finish this
+            if ( transliterate_to_en(str(field).upper()) in transliterate_to_en(str(data_arr[i][col_index]).upper()) ) or ( transliterate_to_en_v2(str(field).upper()) in transliterate_to_en_v2(str(data_arr[i][col_index]).upper()) ):
+                found = True
+        if not found:
+            write_to_csv(output, str(field + "\n").upper())
+
     except Exception as e:
         print(e)
+
+def transliterate_to_en (string):
+    ret = string
+    ret = ret.replace('Ç','C')
+    ret = ret.replace('ç','c')
+    ret = ret.replace('İ','I')
+    ret = ret.replace('i','i')
+    ret = ret.replace('I','I')
+    ret = ret.replace('ı','i')
+    ret = ret.replace('Ğ','G')
+    ret = ret.replace('ğ','g')
+    ret = ret.replace('Ö','O')
+    ret = ret.replace('ö','o')
+    ret = ret.replace('Ş','S')
+    ret = ret.replace('ş','s')
+    ret = ret.replace('Ü','U')
+    ret = ret.replace('ü','u')
+    ret = ret.replace('Ə','E')
+    ret = ret.replace('ə','e')
+    return str(ret).upper()
+
+def transliterate_to_en_v2 (string):
+    ret = string
+    ret = ret.replace('Ç','C')
+    ret = ret.replace('ç','c')
+    ret = ret.replace('İ','I')
+    ret = ret.replace('i','i')
+    ret = ret.replace('I','I')
+    ret = ret.replace('ı','i')
+    ret = ret.replace('Ğ','G')
+    ret = ret.replace('ğ','g')
+    ret = ret.replace('Ö','O')
+    ret = ret.replace('ö','o')
+    ret = ret.replace('Ş','S')
+    ret = ret.replace('ş','s')
+    ret = ret.replace('Ü','U')
+    ret = ret.replace('ü','u')
+    ret = ret.replace('Ə','A')
+    ret = ret.replace('ə','a')
+    return str(ret).upper()
