@@ -304,6 +304,10 @@ def main():
         root.destroy()
         key_input = input("Select an operation\n1)Convert xlsx file to csv\n2)Compare two lists\n99)Quit\n")
         if key_input == '1':
+            root = Tk()
+            filename = filedialog.askopenfilename(title = "Select an xlsx file to Convert to csv",filetypes = (("Xlsx files","*.xlsx"),))
+            dirname = filedialog.askdirectory(title = "Select a directory for csv output file")
+            root.destroy()
             start = time.time()
             utility.xlsx2csv(filename, dirname)
             print("Execution time : ", time.time() - start)
