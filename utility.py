@@ -61,7 +61,7 @@ def compare2diff(input1, input2, output):
 
 # Creates a queue from the rows of a given csv file
 # path -> path to csv file, q -> queue
-def create_queue_infile(path, q):
+def create_queue_infile_raw(path, q):
     try:
         data_list = pandas.read_csv(path, index_col=False, header=None)
         data_arr = numpy.array(data_list.values)
@@ -108,16 +108,21 @@ def substract_from_file(field, file, col_index, output):
 # Filters a file according to the values in the base file
 # file1 -> Base File, file2 -> Data File, output -> Output file location to create an intersection list
 def intersection_of_file(file1, file2, output):
-    q = Queue()
-    create_queue_infile(file1, q)
-    pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count() - 1))
-    while not (q.empty()):
-        res = pool.apply_async(create_intersection_file, args=(q.get(), input2, 5, output,))
-    pool.close()
-    pool.join()
-    print(file1)
-    print(file2)
-    print(output)
+    try:
+        output = output + "/output_int.csv"
+        q = Queue()
+        create_queue_infile_raw(file1, q)
+        pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count() - 1))
+        while not (q.empty()):
+            res = pool.apply_async(create_intersection, args=(q.get(),))
+        pool.close()
+        pool.join()
+    except Exception as e:
+        print(e)
+
+
+def create_intersection(input):
+    print(input)
 
 
 # Transliterate strings from Azerbaijani Latin to English Latin
