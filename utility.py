@@ -56,6 +56,7 @@ def compare2diff(input1, input2, output):
             res = pool.apply_async(substract_from_file, args=(q.get(), input2, 5, output,))
         pool.close()
         pool.join()
+        q.close()
     except Exception as e:
         print(e)
 
@@ -66,7 +67,7 @@ def create_queue_infile_raw(path, q):
         data_list = pandas.read_csv(path, index_col=False, header=None)
         data_arr = numpy.array(data_list.values)
         for i in range(len(data_arr)):
-            q.put(str(data_arr[i]))
+            q.put(str(data_arr[i][0]))
     except Exception as e:
         print(e)
 
@@ -114,15 +115,31 @@ def intersection_of_file(file1, file2, output):
         create_queue_infile_raw(file1, q)
         pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count() - 1))
         while not (q.empty()):
-            res = pool.apply_async(create_intersection, args=(q.get(),))
+            res = pool.apply_async(create_intersection, args=(q.get(), file2, output, ))
         pool.close()
         pool.join()
+        q.close()
     except Exception as e:
         print(e)
 
 
-def create_intersection(input):
-    print(input)
+# Creates an intersection list
+# Takes an input row and another list to check if it exist there to get information
+# Writes the result to a certain file
+def create_intersection(input, file, output):
+    try:
+        data_list = pandas.read_csv(file, low_memory=False, index_col=False, header=None)
+        data_arr = numpy.array(data_list.values)
+        for i in range(len(data_arr)):
+            string = str(data_arr[i][3]) + " " + str(data_arr[i][4]) + " " + str(data_arr[i][5])
+            if str(input).upper() == str(string).upper() :
+                row = ""
+                for j in range(len(data_arr[i])):
+                    row = row + "\"" + str(data_arr[i][j]) + "\","
+                row = row[:-2] + "\"\n"
+                write_to_csv(output, row)
+    except Exception as e:
+        print(e)
 
 
 # Transliterate strings from Azerbaijani Latin to English Latin
