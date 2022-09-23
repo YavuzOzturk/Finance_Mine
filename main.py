@@ -1,3 +1,7 @@
+# Flask
+from flask import Flask
+app = Flask(__name__)
+
 import csv
 import multiprocessing
 import string
@@ -11,7 +15,6 @@ from tkinter import filedialog
 import pandas
 import numpy
 import time
-import xlrd
 #custom imports
 import utility
 
@@ -247,29 +250,6 @@ def write_csv(path, csv_row): # Write output files from Source_1
     with open(full_path, 'a', newline='', encoding="utf-8") as f:
         f.write(csv_row)
 
-# Create distinct files based on date from the external data source
-def create_date_dist (argument1):
-    print(argument1)
-    wb_obj = openpyxl.load_workbook(data_folder+argument1)
-    sheet = wb_obj.active
-    date = ""
-    row_curr = ""
-    for row in sheet.iter_rows(max_row=sheet.max_row):
-        if row[1].value != "Tarix":
-            date = str(row[1].value)
-            date = date.split(' ')[0]
-            date = datetime.strptime(date, '%Y-%m-%d').strftime('%Y%m%d')
-            row_curr = "\""+str(date) +"\",\""+ str(row[3].value) +"\",\""+ str(row[4].value) +"\",\""+ str(row[6].value) +"\",\""+ str(row[8].value) + "\"\n"
-            print(row_curr)
-            write_csv(date+'.csv', row_curr)
-            date = ""
-            row_curr = ""
-
-
-def create_queue(path, q):
-    filenames_s = next(walk(path), (None, None, []))[2]
-    for file in filenames_s:
-        q.put(file, True, None)
 
 def create_list(path, l):
     filenames_s = next(walk(path), (None, None, []))[2]
@@ -298,7 +278,7 @@ def main():
     # pool.join()
 
     while(quit_flag == False):
-        key_input = input("Select an operation\n1)Convert xlsx file to csv\n2)Compare two lists(Substraction)\n3)Compare two lists(Intersection)\n99)Quit\n")
+        key_input = input("Select an operation\n1)Convert xlsx file to csv\n2)Compare two lists(Substraction)\n3)Compare two lists(Intersection)\n4)Create files according to given criteria\n5)Cross reference original to corrupted\n99)Quit\n")
         if key_input == '1':
             root = Tk()
             filename = filedialog.askopenfilename(title = "Select an xlsx file to Convert to csv",filetypes = (("Xlsx files","*.xlsx"),))
@@ -325,11 +305,29 @@ def main():
             start = time.time()
             utility.intersection_of_file(filename1, filename2, dirname)
             print("Execution time : ", time.time() - start)
+        elif key_input == '4':
+            root = Tk()
+            dirname = filedialog.askdirectory(title="Select a directory which contains data files")
+            output_dirname = filedialog.askdirectory(title="Select a directory for output")
+            root.destroy()
+            start = time.time()
+            utility.create_date_list_master(dirname, output_dirname)
+            print("Execution time : ", time.time() - start)
+        elif key_input == '5':
+            root = Tk()
+            dirname = filedialog.askdirectory(title="Select a directory which contains original files")
+            dirname2 = filedialog.askdirectory(title="Select a directory which contains corrupted files")
+            output_dirname = filedialog.askdirectory(title="Select a directory for output")
+            root.destroy()
+            start = time.time()
+            utility.cross_ref_org2corr(dirname, dirname2, output_dirname)
+            print("Execution time : ", time.time() - start)
         elif key_input == '99':
             quit_flag = True
 
 
 if __name__ == '__main__':
     main()
+
 
 

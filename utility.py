@@ -1,9 +1,15 @@
 # Utility functions are stored in here ofr clearer code structure
 import numpy
 import openpyxl
+import xlrd
 import pandas
 from multiprocessing import Queue
 import multiprocessing
+from os import walk
+from os.path import exists
+import time
+from datetime import datetime
+
 
 
 
@@ -85,6 +91,15 @@ def create_queue_infile(path, q, opt):
     except Exception as e:
         print(e)
 
+
+def create_files_queue_from_directory(path, q):
+    try:
+        filenames_s = next(walk(path), (None, None, []))[2]
+        for file in filenames_s:
+            file_path = path + '/' + file
+            q.put(file_path, True, None)
+    except Exception as e:
+        print(e)
 
 # Search for a given field in a given file with given column index
 # Write to another file if not found
@@ -184,3 +199,80 @@ def transliterate_to_en_v2 (string):
     ret = ret.replace('Ə','A')
     ret = ret.replace('ə','a')
     return str(ret).upper()
+
+
+def create_date_list_master(dir_path, output):
+    print(dir_path)
+    q = Queue()
+    create_files_queue_from_directory(dir_path,q)
+    pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count() - 1))
+    while not (q.empty()):
+        res = pool.apply_async(create_date_dist_worker, args=(q.get(), output,))
+    pool.close()
+    pool.join()
+    q.close()
+
+
+# Create distinct files based on date from the external data source
+def create_date_dist_worker(file_path, output):
+    try:
+        wb_obj = openpyxl.load_workbook(file_path)
+        sheet = wb_obj.active
+        date = ""
+        row_curr = ""
+        for row in sheet.iter_rows(max_row=sheet.max_row):
+            if row[1].value != "Tarix":
+                date = str(row[1].value)
+                date = date.split(' ')[0]
+                date = datetime.strptime(date, '%Y-%m-%d').strftime('%Y%m%d')
+                row_curr = "\""+str(date) +"\",\""+ str(row[3].value) +"\",\""+ str(row[4].value) +"\",\""+ str(row[6].value) +"\",\""+ str(row[8].value) + "\"\n"
+                print(row_curr)
+                write_to_csv(output+'/'+date+'.csv', row_curr)
+                date = ""
+                row_curr = ""
+    except Exception as e:
+        print(e)
+
+
+def cross_ref_org2corr_worker(corr_file_path, original_folder_path, output_folder_path):
+    org = Queue()
+    create_files_queue_from_directory(original_folder_path, org)
+    print(corr_file_path)
+    rowIndex = 0
+    try:
+        wb_obj = xlrd.open_workbook(corr_file_path)
+        sheet = wb_obj.sheet_by_index(0)
+        while rowIndex in range(sheet.nrows):
+            flag = False
+            # Compare 0, 4, 5 from corrupted with 1, 6, 8 from original
+            while not (org.empty()):
+                wb_org = openpyxl.load_workbook(org.get())
+                sheet_org = wb_org.active
+                for row in sheet_org.iter_rows(max_row=sheet_org.max_row):
+                    try:
+
+                        if (datetime.strptime(str(sheet.cell_value(rowIndex, 0)), "%d-%m-%Y").date() == datetime.date(row[1].value)):
+                            #print(datetime.strptime(str(sheet.cell_value(rowIndex, 0)), "%d-%m-%Y").date(),
+                            #      datetime.date(row[1].value))
+                            if (sheet.cell_value(rowIndex, 4) == row[6].value):
+                                if (sheet.cell_value(rowIndex, 5) == row[8].value):
+                                    flag = True
+                    except Exception as ex:
+                        continue
+            if not flag:
+                problem_row = str(sheet.cell_value(rowIndex, 0)) + "," + str(sheet.cell_value(rowIndex, 4)) + "," + str(sheet.cell_value(rowIndex, 5)) + "\n"
+                output_file_path = output_folder_path + "/" + str(sheet.cell_value(rowIndex, 0)) + ".csv"
+                write_to_csv(output_file_path, problem_row)
+    except Exception as e:
+        print(e)
+
+
+def cross_ref_org2corr(original_folder_path, corrupted_folder_path, output_folder_path):
+    corr = Queue()
+    create_files_queue_from_directory(corrupted_folder_path, corr)
+    pool = multiprocessing.Pool(processes=(multiprocessing.cpu_count() - 1))
+    while not (corr.empty()):
+        res = pool.apply_async(cross_ref_org2corr_worker, args=(corr.get(), original_folder_path, output_folder_path,))
+    pool.close()
+    pool.join()
+    corr.close()
