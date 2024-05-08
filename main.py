@@ -31,9 +31,9 @@ import utility
 output_folder = 'SingleFileOutput/'  # Folder to write output
 data_folder = 'SingleFileInput/'   # Folder that contains data to mine
 infolist_folder = 'Invoice/stud_based_invoice_list/clean_lvl2/' # Folder that contains reference info
-input_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput\students.csv" # Input file path for single file operations
-input_file2 = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput2\Təhsilalanlar_ATIS.csv"
-output_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileOutput\diff_stud.csv" # Output file path for single file operations
+input_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput\input1.csv" # Input file path for single file operations
+input_file2 = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileInput2\input2S.csv"
+output_file = r"C:\Users\yavuz\PycharmProjects\Finance_Mine\DATAMINING\SingleFileOutput\output.csv" # Output file path for single file operations
 
 
 # Out -> Invoice/stud_based_invoice_list/clean_lvl3/
